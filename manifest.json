@@ -1,0 +1,12 @@
+{
+  "name": "theme.json generator",
+  "id": "1223244804450819424",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "ui": "ui.html"
+}
