@@ -1,3 +1,48 @@
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
+/>
+
+<style>
+  body {
+    padding: 1em;
+  }
+  input {
+    display: block;
+  }
+  textarea {
+    width: 100%;
+    display: block;
+  }
+</style>
+
+<h1>Theme.json Generator ver.0.0.1</h1>
+
+<div>
+  <label for="output-area">CODES</label>
+  <textarea rows="10" id="output-area"></textarea>
+</div>
+
+<script>
+  const codeOutPutArea = document.getElementById("output-area");
+  const createButton = document.getElementById("submit-create");
+  console.log(createButton);
+
+  // 処理を受け取って表示する
+  window.addEventListener("message",(event) => {
+    const message = event.data.pluginMessage
+
+    switch (message.type) {
+      case "render":
+        console.log(message.body)
+        codeOutPutArea.innerHTML = message.body;
+        break
+    }
+  })
+</script>
+
+
+<!-- 
 <h2>Rectangle Creator</h2>
 <p>Count: <input id="count" value="5"></p>
 <button id="create">Create</button>
@@ -14,4 +59,4 @@ document.getElementById('cancel').onclick = () => {
   parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
 }
 
-</script>
+</script> -->
