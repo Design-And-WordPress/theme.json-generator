@@ -1,13 +1,13 @@
 {
   "name": "themejson-generator",
   "version": "1.0.0",
-  "description": "自分のFigmaプラグイン",
+  "description": "theme.json generator",
   "main": "code.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "watch": "npm run build -- --watch"
   },
-  "author": "",
+  "author": "Design and WordPress Contributors",
   "license": "",
   "devDependencies": {
     "@figma/plugin-typings": "^1.62.0",

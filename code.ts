@@ -1,33 +1,67 @@
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
-
-// This file holds the main code for the plugins. It has access to the *document*.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (see documentation).
-
-// This shows the HTML page in "ui.html".
-figma.showUI(__html__);
-
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the
-// posted message.
-figma.ui.onmessage = msg => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
-  if (msg.type === 'create-rectangles') {
-    const nodes: SceneNode[] = [];
-    for (let i = 0; i < msg.count; i++) {
-      const rect = figma.createRectangle();
-      rect.x = i * 150;
-      rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-      figma.currentPage.appendChild(rect);
-      nodes.push(rect);
-    }
-    figma.currentPage.selection = nodes;
-    figma.viewport.scrollAndZoomIntoView(nodes);
-  }
-
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
-  figma.closePlugin();
+type colorType = {
+  color: string;
+  name: string;
+  slug: string;
 };
+
+figma.showUI(__html__);
+figma.ui.resize(500, 400);
+
+// 現在のファイルの塗りのスタイルを取得
+const styles = figma.getLocalPaintStyles();
+
+// 255に換算
+const to255 = (rgb: number) => {
+  return Math.round(rgb * 255);
+};
+
+// RGBA換算
+const toRgba = (rgb: RGB, opacity: number) => {
+  return (
+    to255(rgb.r) +
+    "," +
+    to255(rgb.g) +
+    "," +
+    to255(rgb.b) +
+    "," +
+    opacity.toFixed(1)
+  );
+};
+
+// toCamelCase
+const camelize = (str: string) => {
+  const wordsArr = str.split(/[\W-_]/g);
+  const camelizedWords = wordsArr
+    .map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join("");
+  return camelizedWords;
+};
+
+// toSnakeCase
+const snakeCase = (str: string) => {
+  const camelizedWords = camelize(str);
+  return camelizedWords.replace(/[A-Z]/g, (c) => { return '_' + c.toLowerCase() }).slice(1);
+};
+
+if (figma.editorType === "figma") {
+
+  const colors = styles.map((style) => {
+    if (style.paints[0].type !== "SOLID") {
+      // 単色でなければスキップ
+      return;
+    }
+    
+    const color = style.paints[0].color;
+    const slug = snakeCase(style.name);
+    const name = snakeCase(style.name);
+    const colorData:colorType = {
+      name: name,
+      slug: slug,
+      color: 'rgba(' + toRgba(color, Number(style.paints[0].opacity)) + ')'
+    }
+    return JSON.stringify(colorData);
+  }).join(",");
+  figma.ui.postMessage({ type: "render", body: colors });
+}
