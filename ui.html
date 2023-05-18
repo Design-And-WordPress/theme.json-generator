@@ -25,22 +25,20 @@
 
 <script>
   const codeOutPutArea = document.getElementById("output-area");
-  const createButton = document.getElementById("submit-create");
-  console.log(createButton);
+  console.log(codeOutPutArea);
 
   // 処理を受け取って表示する
-  window.addEventListener("message",(event) => {
-    const message = event.data.pluginMessage
+  window.addEventListener("message", (event) => {
+    const message = event.data.pluginMessage;
 
     switch (message.type) {
       case "render":
-        console.log(message.body)
+        console.log(message.body);
         codeOutPutArea.innerHTML = message.body;
-        break
+        break;
     }
-  })
+  });
 </script>
-
 
 <!-- 
 <h2>Rectangle Creator</h2>
