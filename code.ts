@@ -42,26 +42,36 @@ const camelize = (str: string) => {
 // toSnakeCase
 const snakeCase = (str: string) => {
   const camelizedWords = camelize(str);
-  return camelizedWords.replace(/[A-Z]/g, (c) => { return '_' + c.toLowerCase() }).slice(1);
+  return camelizedWords
+    .replace(/[A-Z]/g, (c) => {
+      return "_" + c.toLowerCase();
+    })
+    .slice(1);
 };
 
 if (figma.editorType === "figma") {
+  const colors = styles
+    .map((style) => {
+      const prefix = /^GRADIENT_.*/;
+      const current = style.paints[0].type;
+      const regex = new RegExp(prefix);
+      console.log(regex.test(current));
+      if (current !== "SOLID" && !regex.test(current)) {
+        // 単色、またはグラデーションでなければスキップ
+        return;
+      }
+      console.log(style);
 
-  const colors = styles.map((style) => {
-    if (style.paints[0].type !== "SOLID") {
-      // 単色でなければスキップ
-      return;
-    }
-    
-    const color = style.paints[0].color;
-    const slug = snakeCase(style.name);
-    const name = snakeCase(style.name);
-    const colorData:colorType = {
-      name: name,
-      slug: slug,
-      color: 'rgba(' + toRgba(color, Number(style.paints[0].opacity)) + ')'
-    }
-    return JSON.stringify(colorData);
-  }).join(",");
+      // const color = style.paints[0].color;
+      // const slug = snakeCase(style.name);
+      // const name = snakeCase(style.name);
+      // const colorData: colorType = {
+      //   name: name,
+      //   slug: slug,
+      //   color: "rgba(" + toRgba(color, Number(style.paints[0].opacity)) + ")",
+      // };
+      // return JSON.stringify(colorData);
+    })
+    .join(",");
   figma.ui.postMessage({ type: "render", body: colors });
 }
