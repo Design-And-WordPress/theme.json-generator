@@ -90,7 +90,7 @@ if (figma.editorType === "figma") {
 
       return JSON.stringify(colorData);
     })
-    .join(",");
+    .join(",\n");
 
   // スタイルが設定されてなかったら、使われているカラーを抜き出す
   if (colors === "") {
@@ -100,7 +100,6 @@ if (figma.editorType === "figma") {
         pageColors.push(...extractColors(child));
       }
     }
-    console.log(pageColors);
     const noStyledColors = pageColors.map((color,index) =>{
       const colorData: colorType = {
         name: String(index),
@@ -109,7 +108,7 @@ if (figma.editorType === "figma") {
       };
       return JSON.stringify(colorData);
     })
-    .join(",");
+    .join(",\n");
     colors = noStyledColors;
   }
 
