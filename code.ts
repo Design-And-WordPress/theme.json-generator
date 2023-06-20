@@ -1,3 +1,10 @@
+interface Color {
+  r: number;
+  g: number;
+  b: number;
+  a?: number;
+}
+
 type colorType = {
   color: string;
   name: string;
@@ -49,27 +56,30 @@ const snakeCase = (str: string) => {
     .slice(1);
 };
 
-// all colors on page
-const extractColors = (node: SceneNode): RGB[] => {
-  let colors: RGB[] = [];
-
+// get all colors on page
+const extractColors = (node: SceneNode, colorSet: Set<string>): void => {
   if ("fills" in node) {
     const fills = node.fills as ReadonlyArray<Paint>;
     for (const fill of fills) {
-      if (fill.type === 'SOLID' && fill.visible !== false) {
-        colors.push(fill.color as RGB);
+      if (fill.type === "SOLID" && fill.visible !== false) {
+        const color: Color = {
+          r: fill.color.r,
+          g: fill.color.g,
+          b: fill.color.b,
+          a: fill.opacity,
+        };
+        // Add the color to the set, represented as a string
+        colorSet.add(JSON.stringify(color));
       }
     }
   }
 
   if ("children" in node) {
     for (const child of node.children) {
-      colors = [...colors, ...extractColors(child)];
+      extractColors(child, colorSet);
     }
   }
-
-  return colors;
-}
+};
 
 if (figma.editorType === "figma") {
   let colors = styles
@@ -94,21 +104,29 @@ if (figma.editorType === "figma") {
 
   // スタイルが設定されてなかったら、使われているカラーを抜き出す
   if (colors === "") {
-    const pageColors: RGB[] = [];
+    const colorSet: Set<string> = new Set();
+
     for (const page of figma.root.children) {
       for (const child of page.children) {
-        pageColors.push(...extractColors(child));
+        extractColors(child, colorSet);
       }
     }
-    const noStyledColors = pageColors.map((color,index) =>{
-      const colorData: colorType = {
-        name: String(index),
-        slug: String(index),
-        color: "rgba(" + toRgba(color, 1) + ")",
-      };
-      return JSON.stringify(colorData);
-    })
-    .join(",\n");
+
+    // Convert the set back to an array of objects
+    const pageColors: Color[] = Array.from(colorSet).map((colorStr) =>
+      JSON.parse(colorStr)
+    );
+
+    const noStyledColors = pageColors
+      .map((color, index) => {
+        const colorData: colorType = {
+          name: String(index),
+          slug: String(index),
+          color: "rgba(" + toRgba(color, color.a ? color.a : 1) + ")",
+        };
+        return JSON.stringify(colorData);
+      })
+      .join(",\n");
     colors = noStyledColors;
   }
 
