@@ -5,7 +5,7 @@ interface Color {
   a?: number;
 }
 
-type colorType = {
+type colorJsonType = {
   color: string;
   name: string;
   slug: string;
@@ -92,7 +92,7 @@ if (figma.editorType === "figma") {
       const color = style.paints[0].color;
       const slug = snakeCase(style.name);
       const name = snakeCase(style.name);
-      const colorData: colorType = {
+      const colorData: colorJsonType = {
         name: name,
         slug: slug,
         color: "rgba(" + toRgba(color, Number(style.paints[0].opacity)) + ")",
@@ -119,7 +119,7 @@ if (figma.editorType === "figma") {
 
     const noStyledColors = pageColors
       .map((color, index) => {
-        const colorData: colorType = {
+        const colorData: colorJsonType = {
           name: String(index),
           slug: String(index),
           color: "rgba(" + toRgba(color, color.a ? color.a : 1) + ")",
