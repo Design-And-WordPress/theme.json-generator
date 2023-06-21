@@ -1,4 +1,11 @@
-type colorType = {
+interface Color {
+  r: number;
+  g: number;
+  b: number;
+  a?: number;
+}
+
+type colorJsonType = {
   color: string;
   name: string;
   slug: string;
@@ -42,26 +49,86 @@ const camelize = (str: string) => {
 // toSnakeCase
 const snakeCase = (str: string) => {
   const camelizedWords = camelize(str);
-  return camelizedWords.replace(/[A-Z]/g, (c) => { return '_' + c.toLowerCase() }).slice(1);
+  return camelizedWords
+    .replace(/[A-Z]/g, (c) => {
+      return "_" + c.toLowerCase();
+    })
+    .slice(1);
+};
+
+// get all colors on page
+const extractColors = (node: SceneNode, colorSet: Set<string>): void => {
+  if ("fills" in node) {
+    const fills = node.fills as ReadonlyArray<Paint>;
+    for (const fill of fills) {
+      if (fill.type === "SOLID" && fill.visible !== false) {
+        const color: Color = {
+          r: fill.color.r,
+          g: fill.color.g,
+          b: fill.color.b,
+          a: fill.opacity,
+        };
+        // Add the color to the set, represented as a string
+        colorSet.add(JSON.stringify(color));
+      }
+    }
+  }
+
+  if ("children" in node) {
+    for (const child of node.children) {
+      extractColors(child, colorSet);
+    }
+  }
 };
 
 if (figma.editorType === "figma") {
+  let colors = styles
+    .map((style) => {
+      if (style.paints[0].type !== "SOLID") {
+        // 単色でなければスキップ
+        return;
+      }
 
-  const colors = styles.map((style) => {
-    if (style.paints[0].type !== "SOLID") {
-      // 単色でなければスキップ
-      return;
+      const color = style.paints[0].color;
+      const slug = snakeCase(style.name);
+      const name = snakeCase(style.name);
+      const colorData: colorJsonType = {
+        name: name,
+        slug: slug,
+        color: "rgba(" + toRgba(color, Number(style.paints[0].opacity)) + ")",
+      };
+
+      return JSON.stringify(colorData);
+    })
+    .join(",\n");
+
+  // スタイルが設定されてなかったら、使われているカラーを抜き出す
+  if (colors === "") {
+    const colorSet: Set<string> = new Set();
+
+    for (const page of figma.root.children) {
+      for (const child of page.children) {
+        extractColors(child, colorSet);
+      }
     }
-    
-    const color = style.paints[0].color;
-    const slug = snakeCase(style.name);
-    const name = snakeCase(style.name);
-    const colorData:colorType = {
-      name: name,
-      slug: slug,
-      color: 'rgba(' + toRgba(color, Number(style.paints[0].opacity)) + ')'
-    }
-    return JSON.stringify(colorData);
-  }).join(",");
+
+    // Convert the set back to an array of objects
+    const pageColors: Color[] = Array.from(colorSet).map((colorStr) =>
+      JSON.parse(colorStr)
+    );
+
+    const noStyledColors = pageColors
+      .map((color, index) => {
+        const colorData: colorJsonType = {
+          name: String(index),
+          slug: String(index),
+          color: "rgba(" + toRgba(color, color.a ? color.a : 1) + ")",
+        };
+        return JSON.stringify(colorData);
+      })
+      .join(",\n");
+    colors = noStyledColors;
+  }
+
   figma.ui.postMessage({ type: "render", body: colors });
 }

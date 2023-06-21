@@ -25,7 +25,6 @@
 
 <script>
   const codeOutPutArea = document.getElementById("output-area");
-  console.log(codeOutPutArea);
 
   // 処理を受け取って表示する
   window.addEventListener("message", (event) => {
@@ -33,7 +32,10 @@
 
     switch (message.type) {
       case "render":
-        console.log(message.body);
+        if(!message.body || message.body === ""){
+          codeOutPutArea.innerHTML = "No color is found in the file. Please run with a file that has a color setting.";
+          break;
+        }
         codeOutPutArea.innerHTML = message.body;
         break;
     }

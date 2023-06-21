@@ -6,3 +6,6 @@ node_modules
 out/
 dist/
 code.js
+
+# Editor directories and files
+.DS_Store
